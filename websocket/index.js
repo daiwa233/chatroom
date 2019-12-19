@@ -1,11 +1,11 @@
 const Encrypted = require('../encrypted')
-module.exports = () => {
+module.exports = (port) => {
   const ws = require('ws');
   const cuid = require('cuid');
   const clientList = [];
   let clientOnline = 0;
   const WebSocketServer = ws.Server,
-        wss = new WebSocketServer({port: 223});
+        wss = new WebSocketServer({port});
   
     wss.on('connection', function(ws) {
 

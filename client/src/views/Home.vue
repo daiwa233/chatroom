@@ -1,5 +1,5 @@
 <template>
-  <div class="home">
+ <div class="home">
     <div class="bg"></div>
     <div class="wrapBg"></div>
     <div class="content-body">
@@ -15,13 +15,14 @@
             v-for="(item,index) in chatRoomsName"
             :key="index"
           >
-            <div class="chat-title">{{ item }}</div>
+            <div class="chat-title">{{ item.name }}</div>
           </div>
         </div>
       </div>
       <div class="right-part">
         <div v-if="wsConnect" class="chat-dialog">
           <div class="rightPart-header">
+            <span class="quit-ws" @click="WSclose(nowName)">返回</span>
             <div class="roomInfo">
               <span class="roomName">{{ nowName }}</span>
               <span class="online">在线({{ online }})</span>
@@ -33,14 +34,20 @@
               <!-- 页面内容区域 -->
               <div :class="faceShow ? 'contentBox contFaceShow' : 'contentBox'">
                 <ul>
+                
                   <li v-for="(item,index) in content" :key="index">
+                  <!-- 时间 大于30s显示出来 -->
+                    <div class="radioMsg" v-if=" content[index-1] && item.date - content[index-1].date > 10000 ">
+                      <span style="padding: 3px;">{{item.date | dateFormat}}</span>
+                    </div>
+                  <!-- 收到自己的消息 -->
                     <div v-if="item.clientContent" class="right">
                       <div class="msg-info-right">
                         <div>
                           <span class="msg-user">{{item.username}}</span>
                           <div class="clientMsg">
                             
-                            <p v-for="(i,ind) in Math.ceil(item.clientContent.length/18)" :key="ind" style="text-align:left">{{item.clientContent.slice(ind*18,i*18)}} </p>
+                            <p v-for="(i,ind) in Math.ceil(item.clientContent.length/18)" :key="ind" style="text-align:left">{{item.clientContent.slice(ind*18,i*18) | SenstiveFilter}} </p>
                             <!-- <p >{{item.clientContent}}</p> -->
                             
                           </div>
@@ -51,10 +58,12 @@
                         >{{ uName.slice(0,1) }}</div>
                       </div>
                     </div>
+                    <!-- 入场或退出广播 -->
                     <div v-if="item.radioMsg" class="radioMsg">
-                      <span>{{item.radioMsg}}</span>
+                      <span >{{item.radioMsg}}</span>
                     </div>
-
+                    
+                    <!-- 收到别人的消息 -->
                     <div v-if="item.content" class="serverMsg">
                       <div class="msg-info-left">
                         <div
@@ -65,7 +74,7 @@
                           <span class="msg-user">{{item.username}}</span>
                           <div class="serverMsg-content">
                             
-                            <p v-for="(i,ind) in Math.ceil(item.content.length/18)" :key="ind" style="text-align:left; ">{{item.content.slice(ind*18,i*17)}}</p>
+                            <p v-for="(i,ind) in Math.ceil(item.content.length/18)" :key="ind" style="text-align:left; ">{{item.content.slice(ind*18,i*18) | SenstiveFilter}}</p>
                             <!-- <p >{{item.content}}</p> -->
                             
                           </div>
@@ -74,6 +83,7 @@
                       </div>
                     </div>
                   </li>
+                  
                 </ul>
               </div>
               <!-- 输入框区域 -->
@@ -98,22 +108,26 @@
       </div>
     </div>
     <my-dialog v-show="showDialog" :showFlag="showDialog" @sureFn1="postUName" @turnOff="turnOff"></my-dialog>
+    <error-dialog v-show="errorFlag" @turnOff="turnOff" :msg="errormsg"></error-dialog>
   </div>
 </template>
 
 <script>
 // @ is an alias to /src
 import Mydialog from "@/components/dialog.vue";
+import ErrorDialog from "@/components/ErrorDialog.vue";
 // 导入JSON格式的表情库
 const appData = require("@/assets/emojis.json");
-import CryptoJS from 'crypto-js'
-import JSEncrypt  from "jsencrypt";
+import CryptoJS from "crypto-js";
+import JSEncrypt from "jsencrypt";
+// 定义AES密钥
 const AES_KEY = "qq3217834abcdefg"; //16位
-const AES_IV = "1234567890123456";  //16位
+const AES_IV = "1234567890123456"; //16位
 export default {
   name: "home",
   components: {
-    "my-dialog": Mydialog
+    "my-dialog": Mydialog,
+    ErrorDialog
   },
   data() {
     function color16() {
@@ -122,12 +136,12 @@ export default {
       var g = Math.floor(Math.random() * 256);
       var b = Math.floor(Math.random() * 256);
       var color = "#" + r.toString(16) + g.toString(16) + b.toString(16);
-      if (color == '#ffffff' || color=="#000000") {
+      if (color == "#ffffff" || color == "#000000") {
         return color16();
       }
       return color;
     }
-    let randomColor = color16()
+    let randomColor = color16();
     return {
       showDialog: false,
       uName: "",
@@ -139,9 +153,14 @@ export default {
       getBrowString: "",
       content: [],
       online: 0,
-      chatRoomsName: ["信息安全讨论组"],
+      chatRoomsName: [
+        {name: '信息安全讨论组', port: '224'},
+        {name: '开黑', port: '223'}
+      ],
       nowName: "",
-      randomColor
+      randomColor,
+      errorFlag: false,
+      errormsg: 'sorry,出问题了(可能是网络问题，建议刷新重试)'
     };
   },
   methods: {
@@ -153,8 +172,9 @@ export default {
     },
     turnOff() {
       this.showDialog = false;
+      this.errorFlag = false;
     },
-    verifyUser(name) {
+    verifyUser(item) {
       // 如果本地存储中没有用户名，则弹出弹窗
       const isLogin = localStorage.dvaAccessUName ? true : false;
 
@@ -163,19 +183,26 @@ export default {
       }
       if (!this.wsConnect) {
         this.wsConnect = true;
-        this.nowName = name;
-        try {
-          this.getConnectionWS();
-        } catch {
-          console.log("socket状态不对");
-        }
+        // 内容初始化
+        this.nowName = item.name;
+        this.content = JSON.parse(localStorage.getItem(this.nowName)) || [];
+
+        this.getConnectionWS(item.port);
       }
     },
-    getConnectionWS() {
-      // 实例化一个websocket
-      const ws = new WebSocket("ws://localhost:223");
-      this.ws = ws;
+    getConnectionWS(port) {
       let _that = this;
+      // 实例化一个websocket
+      const ws = new WebSocket(`ws://localhost:${port}`);
+
+      ws.onerror = function(e) {
+        _that.errorFlag = true;
+        console.log("socket状态不对");
+        return;
+      };
+
+      this.ws = ws;
+
       // 监听websocket连接打开
       ws.onopen = function(e) {
         console.log("chatroom connected");
@@ -186,16 +213,29 @@ export default {
         _that.mixSend(initMsg);
       };
 
+      // 监听ws断开连接
+      ws.onclose = function(e) {
+        // 如果正常使用中断开连接，则向客户端提示错误
+        if (_that.wsConnect) {
+          _that.wsConnect = false;
+          _that.errormsg = 'socket断开连接';
+          _that.errorFlag = true;
+        }
+
+      }
+
+
       ws.onmessage = this.getmsgFromServer;
     },
 
     getmsgFromServer(e) {
       //先解密
       let encryptMsg = JSON.parse(e.data) || "";
-      
-      
-      let msg = encryptMsg.encrypt ? JSON.parse(this.aes_decrypt(encryptMsg.message)) : encryptMsg;
-      
+
+      let msg = encryptMsg.encrypt
+        ? JSON.parse(this.aes_decrypt(encryptMsg.message))
+        : encryptMsg;
+
       // 一共会受到三种广播消息：在线人数， xx进入或退出群聊， 发送的消息。
 
       if (msg.username == this.uName) {
@@ -229,18 +269,22 @@ export default {
     },
     mixSend(message) {
       // 使用AES加密消息
-        let encrypted = this.aes_encrypt(message);
-        // 将AES密钥通过RSA公钥加密，一起发送给服务端
-        let encryptedAESKEY= this.RSAEncrypt(JSON.stringify({
-           AES_KEY,
-           AES_IV
-         }));
-        
-        // 发送加密后的消息
-        this.ws.send(JSON.stringify({
+      let encrypted = this.aes_encrypt(message);
+      // 将AES密钥通过RSA公钥加密，一起发送给服务端
+      let encryptedAESKEY = this.RSAEncrypt(
+        JSON.stringify({
+          AES_KEY,
+          AES_IV
+        })
+      );
+
+      // 发送加密后的消息
+      this.ws.send(
+        JSON.stringify({
           encrypted,
           encryptedAESKEY
-        }));
+        })
+      );
     },
     // 对消息加密
     RSAEncrypt(msg) {
@@ -260,14 +304,22 @@ AyiMWhrteM1d1MR3gQIDAQAB
 
     // AES 加密消息
     aes_encrypt(plainText) {
-      var encrypted = CryptoJS.AES.encrypt(plainText, CryptoJS.enc.Utf8.parse(AES_KEY), {iv:  CryptoJS.enc.Utf8.parse(AES_IV)});
+      var encrypted = CryptoJS.AES.encrypt(
+        plainText,
+        CryptoJS.enc.Utf8.parse(AES_KEY),
+        { iv: CryptoJS.enc.Utf8.parse(AES_IV) }
+      );
       return CryptoJS.enc.Base64.stringify(encrypted.ciphertext);
-  },
-  //  Aes 解密消息
+    },
+    //  Aes 解密消息
     aes_decrypt(ciphertext) {
-    var decrypted = CryptoJS.AES.decrypt(ciphertext, CryptoJS.enc.Utf8.parse(AES_KEY), {iv: CryptoJS.enc.Utf8.parse(AES_IV)});
-    return decrypted.toString(CryptoJS.enc.Utf8);
-},
+      var decrypted = CryptoJS.AES.decrypt(
+        ciphertext,
+        CryptoJS.enc.Utf8.parse(AES_KEY),
+        { iv: CryptoJS.enc.Utf8.parse(AES_IV) }
+      );
+      return decrypted.toString(CryptoJS.enc.Utf8);
+    },
 
     // 表情
     faceContent() {
@@ -294,11 +346,20 @@ AyiMWhrteM1d1MR3gQIDAQAB
       if (!this.textConent) {
         return;
       }
+      if(!this.wsConnect) return this.errorFlag = true;
       // 调用发送信息方法
       this.sendMsg();
 
       // 关闭表情列表
       this.faceShow = false;
+    },
+    WSclose() {
+      this.wsConnect = false;
+      // 退出聊天室，清空数据
+      this.ws.close();
+      localStorage.setItem(this.nowName, JSON.stringify(this.content));
+      this.content = [];
+      this.online = 0;
     }
   },
   created() {
@@ -404,6 +465,29 @@ body {
   justify-content: center;
   align-items: center;
 }
+.quit-ws:before{
+  content: '';
+  display: block; 
+  position: absolute;
+  left: 3px;
+  top: 7px;
+  border-top: 1px solid #000;
+  border-right: 1px solid #000;
+  transform: rotate(-135deg);
+  right: 8px;
+  width: 6px;
+  height: 6px;
+
+  
+}
+.quit-ws{
+  position: absolute;
+  left: 16px;
+  padding-left: 10px;
+  font-size: 14px;
+  cursor: pointer;
+}
+
 .roomInfo {
   display: flex;
   flex-direction: column;

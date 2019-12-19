@@ -26,6 +26,8 @@ module.exports = (msg) => {
       }catch(e){
         console.log(e)
         console.log('incorrect key');
+        // 不能返回’‘，json.parse()会报错
+        return null;
       }
 
     }
