@@ -3,36 +3,21 @@
     <div class="bg"></div>
     <div class="wrapBg"></div>
     <div class="content-body">
-      <div class="left-part">
-        <div class="user-info">
-          <div class="avatar" :style="'background:'+randomColor">{{ uName.slice(0,1) }}</div>
-          <span>{{ uName }}</span>
-        </div>
-        <div class="chat-list">
-          <div
-            class="chat-item"
-            @click="verifyUser(item)"
-            v-for="(item,index) in chatRoomsName"
-            :key="index"
-          >
-            <div class="chat-title">{{ item.name }}</div>
-          </div>
-        </div>
-      </div>
       <div class="right-part">
-        <div v-if="wsConnect" class="chat-dialog">
-          <div class="rightPart-header">
-            <span class="quit-ws" @click="WSclose(nowName)">返回</span>
+        <div v-if="login" class="chat-dialog">
+          
+
+          <div class="msg-area">
+            <div class="home-content">
+              <div class="rightPart-header">
+            
             <div class="roomInfo">
               <span class="roomName">{{ nowName }}</span>
               <span class="online">在线({{ online }})</span>
             </div>
           </div>
-
-          <div class="msg-area">
-            <div class="home-content">
               <!-- 页面内容区域 -->
-              <div :class="faceShow ? 'contentBox contFaceShow' : 'contentBox'">
+              <div :class="faceShow ? 'contentBox scrollbar contentBoxWithEmoji' : 'contentBox scrollbar' " ref="content_body">
                 <ul>
                 
                   <li v-for="(item,index) in content" :key="index">
@@ -54,8 +39,7 @@
                         </div>
                         <div
                           class="chat-avatar"
-                          :style="'background:'+randomColor"
-                        >{{ uName.slice(0,1) }}</div>
+                        ><img :src="avatar_url" alt="" class="avatar"></div>
                       </div>
                     </div>
                     <!-- 入场或退出广播 -->
@@ -68,8 +52,7 @@
                       <div class="msg-info-left">
                         <div
                           class="chat-avatar"
-                          :style="'background:'+item.color"
-                        >{{ item.username.slice(0,1) }}</div>
+                        ><img :src="avatar_url" alt="" class="avatar"></div>
                         <div>
                           <span class="msg-user">{{item.username}}</span>
                           <div class="serverMsg-content">
@@ -87,63 +70,72 @@
                 </ul>
               </div>
               <!-- 输入框区域 -->
-              <div :class="faceShow ?'box boxFaceShow' : 'box'" ref="heightFace">
-                <input type="text" v-model="textConent" class="inputContent" @keydown.enter="referContent"/>
-                <button class="referBut" @click="referContent">提交</button>
-                <button class="faceBut" @click="faceContent">表情</button>
+              <div :class="faceShow ? 'boxWithEmoji box' : 'box'" ref="heightFace">
+               
+              
+                <div class="add_area">
+                  <div class="icon-font">
+                    <svg @click="faceContent" t="1579087229705" class="icon" viewBox="0 0 1024 1024" version="1.1" xmlns="http://www.w3.org/2000/svg" p-id="5776" width="32" height="32"><path d="M512 832c-176.448 0-320-143.552-320-320S335.552 192 512 192s320 143.552 320 320-143.552 320-320 320m0-704C300.256 128 128 300.256 128 512s172.256 384 384 384 384-172.256 384-384S723.744 128 512 128" p-id="5777" fill="#cdcdcd"></path><path d="M700.64 580.288a32 32 0 0 0-43.712 11.68A160.608 160.608 0 0 1 518.304 672a160.576 160.576 0 0 1-138.592-80 32 32 0 0 0-55.424 32.032 224.896 224.896 0 0 0 194.016 112 224.768 224.768 0 0 0 194.016-112 32 32 0 0 0-11.68-43.744M384 512a32 32 0 0 0 32-32v-96a32 32 0 0 0-64 0v96a32 32 0 0 0 32 32M640 512a32 32 0 0 0 32-32v-96a32 32 0 0 0-64 0v96a32 32 0 0 0 32 32" p-id="5778" fill="#cdcdcd"></path></svg>
+                    
+                  </div>
+                  <div class="icon-font">
+                  <svg t="1579087200143" class="icon" viewBox="0 0 1024 1024" version="1.1" xmlns="http://www.w3.org/2000/svg" p-id="4473" width="32" height="32"><path d="M271.738 465.729c56.472 0 102.438-46.461 102.438-103.514 0-57.083-45.966-103.515-102.438-103.515S169.3 305.132 169.3 362.215C169.3 419.268 215.266 465.729 271.738 465.729zM271.738 288.5c40.058 0 72.637 33.074 72.637 73.715 0 40.654-32.579 73.714-72.637 73.714-40.059 0-72.638-33.06-72.638-73.714C199.1 321.574 231.679 288.5 271.738 288.5z" p-id="4474" fill="#cdcdcd"></path><path d="M65 154.4 65 869.6l894 0L959 154.4 65 154.4zM929.2 839.8 123.582 839.8l288.76-244.322L560.57 724.965 929.2 430.355 929.2 839.8zM929.2 392.218 561.414 686.144 412.662 556.176 94.8 825.118 94.8 184.2l834.4 0L929.2 392.218z" p-id="4475" fill="#cdcdcd"></path></svg> 
+                  </div>
+                </div>
+                
+                  <textarea v-model="textConent" class="textarea scrollbar" @keydown.enter="referContent"></textarea>
+                <!-- <input type="text" v-model="textConent" class="inputContent" @keydown.enter="referContent"/> -->
+               
+                <div class="sendBox">
+                   <button class="btn btn-primary sendBtn"  @click="referContent">发送</button>
+                </div>
+                
                 
               </div>
-              <!-- 表情区域 -->
-              <div class="browBox" v-if="faceShow">
+               
+               <!-- 表情区域 -->
+                <div class="browBox scrollbar" v-if="faceShow">
+                
                 <ul>
                   <li v-for="(item,index) in faceList" :key="index" @click="getBrow(index)">{{item}}</li>
                 </ul>
+                
               </div>
             </div>
           </div>
         </div>
-        <div v-else>
-          <p>快去加入一个群聊吧</p>
-        </div>
+        <login v-else></login>
       </div>
     </div>
-    <my-dialog v-show="showDialog" :showFlag="showDialog" @sureFn1="postUName" @turnOff="turnOff"></my-dialog>
+   
     <error-dialog v-show="errorFlag" @turnOff="turnOff" :msg="errormsg"></error-dialog>
+    
   </div>
 </template>
 
 <script>
-// @ is an alias to /src
-import Mydialog from "@/components/dialog.vue";
+
 import ErrorDialog from "@/components/ErrorDialog.vue";
+
+// 登录组件
+import Login from "@/views/login.vue"
+
+import { solveCookie, RSAEncrypt, AESEncrypt, AESDecrypt, color16, AES_KEY, AES_IV } from "@/utils/index.js"
 // 导入JSON格式的表情库
 const appData = require("@/assets/emojis.json");
-import CryptoJS from "crypto-js";
-import JSEncrypt from "jsencrypt";
-// 定义AES密钥
-const AES_KEY = "qq3217834abcdefg"; //16位
-const AES_IV = "1234567890123456"; //16位
+
+
 export default {
   name: "home",
   components: {
-    "my-dialog": Mydialog,
-    ErrorDialog
+    ErrorDialog,
+    Login
   },
-  data() {
-    function color16() {
-      //十六进制颜色随机
-      var r = Math.floor(Math.random() * 256);
-      var g = Math.floor(Math.random() * 256);
-      var b = Math.floor(Math.random() * 256);
-      var color = "#" + r.toString(16) + g.toString(16) + b.toString(16);
-      if (color == "#ffffff" || color == "#000000") {
-        return color16();
-      }
-      return color;
-    }
+  data() { 
+    
     let randomColor = color16();
     return {
-      showDialog: false,
+      login: false,
       uName: "",
       wsConnect: false,
       ws: "",
@@ -153,14 +145,12 @@ export default {
       getBrowString: "",
       content: [],
       online: 0,
-      chatRoomsName: [
-        {name: '信息安全讨论组', port: '224'},
-        {name: '开黑', port: '223'}
-      ],
-      nowName: "",
+      nowName: "交流",
       randomColor,
       errorFlag: false,
-      errormsg: 'sorry,出问题了(可能是网络问题，建议刷新重试)'
+      errormsg: 'sorry,出问题了(可能是网络问题，建议刷新重试)',
+      dialogmsg: '请输入一个用户名以便加入聊天',
+      avatar_url: ''
     };
   },
   methods: {
@@ -174,20 +164,19 @@ export default {
       this.showDialog = false;
       this.errorFlag = false;
     },
-    verifyUser(item) {
+    verifyUser() {
       // 如果本地存储中没有用户名，则弹出弹窗
       const isLogin = localStorage.dvaAccessUName ? true : false;
 
-      if (!isLogin) {
-        return (this.showDialog = true);
+      if (isLogin) {
+        this.login = true;
       }
-      if (!this.wsConnect) {
+      if (this.login && !this.wsConnect) {
         this.wsConnect = true;
         // 内容初始化
-        this.nowName = item.name;
         this.content = JSON.parse(localStorage.getItem(this.nowName)) || [];
 
-        this.getConnectionWS(item.port);
+        this.getConnectionWS(223);
       }
     },
     getConnectionWS(port) {
@@ -232,8 +221,9 @@ export default {
       //先解密
       let encryptMsg = JSON.parse(e.data) || "";
 
+
       let msg = encryptMsg.encrypt
-        ? JSON.parse(this.aes_decrypt(encryptMsg.message))
+        ? JSON.parse(AESDecrypt(encryptMsg.message))
         : encryptMsg;
 
       // 一共会受到三种广播消息：在线人数， xx进入或退出群聊， 发送的消息。
@@ -245,14 +235,25 @@ export default {
           username: this.uName,
           date: Date.now()
         });
+        
         // 清空input数据
         this.textConent = "";
+        // 发送完消息, dom 更新完毕 滚动条到最下面
+        this.$nextTick(() => {
+          this.$refs.content_body.scrollTo(0, this.$refs.content_body.scrollHeight);
+        })
+        
+
         return;
       }
       if (msg.online) {
         this.online = msg.online;
       }
       this.content.push(msg);
+      // 发送完消息, dom 更新完毕 滚动条到最下面
+        this.$nextTick(() => {
+          this.$refs.content_body.scrollTo(0, this.$refs.content_body.scrollHeight);
+        })
     },
 
     sendMsg() {
@@ -267,11 +268,12 @@ export default {
         this.mixSend(message);
       }
     },
+    // 对信息进行混合加密
     mixSend(message) {
       // 使用AES加密消息
-      let encrypted = this.aes_encrypt(message);
+      let encrypted = AESEncrypt(message)
       // 将AES密钥通过RSA公钥加密，一起发送给服务端
-      let encryptedAESKEY = this.RSAEncrypt(
+      let encryptedAESKEY = RSAEncrypt(
         JSON.stringify({
           AES_KEY,
           AES_IV
@@ -286,41 +288,6 @@ export default {
         })
       );
     },
-    // 对消息加密
-    RSAEncrypt(msg) {
-      let jse = new JSEncrypt();
-      //公钥
-      var publicKey = `-----BEGIN PUBLIC KEY-----
-MIGfMA0GCSqGSIb3DQEBAQUAA4GNADCBiQKBgQCK3siV2MKl7ADFMajEsbc/ZrST
-fo9h37c6+m0cUHOTqGR4V+Ugzc5Wzpcrz6QGu7/umQBJRC3LZ8xRW8+J6Z1lI0+T
-r6LT8NfLUeyBTBXkBI1j0BIzmEjsW/a1vDr2ahXn1RFvtnHeKs41lbICkY7mRA2c
-AyiMWhrteM1d1MR3gQIDAQAB
------END PUBLIC KEY-----`;
-      jse.setPublicKey(publicKey);
-      // 加密内容
-
-      return jse.encrypt(msg);
-    },
-
-    // AES 加密消息
-    aes_encrypt(plainText) {
-      var encrypted = CryptoJS.AES.encrypt(
-        plainText,
-        CryptoJS.enc.Utf8.parse(AES_KEY),
-        { iv: CryptoJS.enc.Utf8.parse(AES_IV) }
-      );
-      return CryptoJS.enc.Base64.stringify(encrypted.ciphertext);
-    },
-    //  Aes 解密消息
-    aes_decrypt(ciphertext) {
-      var decrypted = CryptoJS.AES.decrypt(
-        ciphertext,
-        CryptoJS.enc.Utf8.parse(AES_KEY),
-        { iv: CryptoJS.enc.Utf8.parse(AES_IV) }
-      );
-      return decrypted.toString(CryptoJS.enc.Utf8);
-    },
-
     // 表情
     faceContent() {
       this.faceShow = !this.faceShow;
@@ -360,23 +327,45 @@ AyiMWhrteM1d1MR3gQIDAQAB
       localStorage.setItem(this.nowName, JSON.stringify(this.content));
       this.content = [];
       this.online = 0;
+    },
+    // 修改用户名
+    changeUname() {
+      this.dialogmsg = "请修改您的昵称"
+      this.showDialog = true;
     }
   },
   created() {
-    this.uName = localStorage.getItem("dvaAccessUName") || "";
+    
+    
+    let cookies = solveCookie(document.cookie) || '';
+    const { usr, avatar_url } = cookies;
+    if (usr && avatar_url) {
+      this.uName = usr;
+      localStorage.setItem('dvaAccessUName', usr)
+      this.avatar_url = avatar_url;
+      this.verifyUser();
+      return;
+    }
+
+    this.login = false
+    
+
   },
-  watch: {}
 };
 </script>
 
 <style scoped>
+p{
+  margin: 0;
+  padding: 0;
+}
 body {
   overflow-x: hidden;
 }
 .bg {
   width: 100%;
   height: 100vh;
-  background: url("http://dmimg.5054399.com/allimg/pkm/pk/22.jpg");
+  background: url("http://q2nusq7zh.bkt.clouddn.com/timg.jpg");
   background-size: 100% 100%;
   z-index: -999;
   position: fixed;
@@ -400,53 +389,28 @@ body {
 }
 .content-body {
   display: flex;
-  justify-content: space-between;
-  height: 60vh;
+  justify-content: center;
+  align-items: center;
+  height: 65vh;
   margin: 150px auto 0;
-  width: 70%;
-  max-width: 880px;
 }
-.chat-item {
+
+
+
+.right-part {
   width: 100%;
-  box-sizing: border-box;
-  padding: 5px;
-  height: 3rem;
   display: flex;
   justify-content: center;
   align-items: center;
-  border-bottom: 1px solid #ccc;
-}
-.chat-item:hover {
-  background: rgba(0, 0, 0, 0.1);
-}
-.left-part {
-  max-width: 240px;
-  width: 25%;
-}
-.right-part {
-  max-width: 600px;
-  width: 70%;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-}
-.left-part,
-.right-part {
   background: #fff;
   height: 100%;
-  border-radius: 10px;
 }
-.user-info {
-  display: flex;
-  justify-content: space-between;
-  border-bottom: 1px solid #ccc;
-  padding: 10px;
-}
+
+
 .avatar {
   width: 3rem;
   height: 3rem;
   border-radius: 50%;
-  background: rgba(7, 40, 233, 0.5);
   display: flex;
   justify-content: center;
   align-items: center;
@@ -456,10 +420,12 @@ body {
   height: 100%;
   display: flex;
   flex-direction: column;
+  
 }
 .rightPart-header {
   position: relative;
-  flex: 1;
+  height: 40px;
+  flex-shrink: 0;
   border-bottom: 1px solid #ccc;
   display: flex;
   justify-content: center;
@@ -477,8 +443,11 @@ body {
   right: 8px;
   width: 6px;
   height: 6px;
-
-  
+}
+.change{
+  font-size: 10px;
+  color: #ccc;
+  cursor: pointer;
 }
 .quit-ws{
   position: absolute;
@@ -501,7 +470,86 @@ body {
   flex: 12;
   display: flex;
   justify-content: center;
+}
+.home{
+  max-width: 800px;
+  width: 100%;
+  min-width: 300px;
+  margin: 0 auto;
+}
+.textarea{
+  width: 100%;
+  line-height: 1.2em;
+  border: none;
+  outline: none;
+  background: #fff;
+  padding-left: 10px;
+  margin: 10px 0;
+  resize: none;
+  height: 2.5em;
+
+}
+.icon{
   padding: 5px;
+}
+.icon-font{
+  position: relative;
+  border-radius: 50%;
+}
+.icon-font:hover{
+  background: #ddd;
+}
+@media (max-width: 800px) {
+  .content-body {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 100vh;
+  width: 100%;
+  overflow: hidden;
+  margin: 0;
+}
+.avatar{
+  width: 2rem !important;
+  height: 2rem !important;
+}
+
+.add_area{
+  order: 2;
+}
+.contentBox {
+  bottom: 70px !important;
+
+}
+.contentBoxWithEmoji{
+  bottom: 270px !important;
+}
+.boxWithEmoji{
+  bottom: 200px !important;
+}
+.browBox{
+  width: 100% !important;
+  bottom: 0 !important;
+}
+.box{
+  height: 70px !important;
+  flex-direction: row !important;
+  flex-wrap: wrap;
+}
+.textarea{
+  height: 36.5px !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  padding: 5px !important;
+  width: 80% !important;
+}
+.sendBox{
+  width: 20% !important;
+  margin: 0 !important;
+}
+.sendBtn{
+  margin: 0 !important;
+}
 }
 </style>
 
@@ -521,13 +569,13 @@ head,
   height: 100%;
   .contentBox {
     width: 100%;
-    height: 88.7%;
     display: flex;
     justify-content: flex-end;
     text-align: right;
     position: absolute;
-    bottom: 60px;
-    overflow-y: scroll;
+    top: 50px;
+    bottom: 130px;
+    border-bottom: 1px solid #ccc;
     ul {
       width: 100%;
       box-sizing: border-box;
@@ -617,36 +665,31 @@ head,
       }
     }
   }
-  .contFaceShow {
-    position: absolute;
-    bottom: 240px;
-    height: 50%;
-  }
+
   .box {
     width: 100%;
-    height: 40px;
     margin: auto;
+    height: 130px;
     position: absolute;
     bottom: 0px;
-    .inputContent {
-      position: absolute;
-      bottom: 0%;
-      left: 0%;
-      width: 74%;
-      height: 100%;
-      border: 1px solid #ccc;
-      padding-left: 5px;
+    display: flex;
+    flex-direction: column;
+    
+    .add_area{
+      width: 100%;
+      display: flex;
+      
     }
-    .referBut {
-      position: absolute;
-      bottom: 0%;
-      right: 2%;
-      height: 100%;
-      width: 10%;
-      border-radius: 5px;
-      background: #aaaaff;
-      color: #fff;
-    }
+
+   .sendBox{
+     display: flex;
+     flex-direction: row-reverse;
+   }
+   .sendBtn{
+     font-size: 12px;
+     margin-right: 1.5rem;
+     outline: none;
+   }
     .faceBut {
       position: absolute;
       bottom: 0;
@@ -663,19 +706,21 @@ head,
     bottom: 200px !important;
   }
   .browBox {
-    width: 100%;
+    width: 50%;
     height: 200px;
-    background: #e6e6e6;
+    background: #fff;
     position: absolute;
-    bottom: 0px;
-    overflow: scroll;
+    bottom: 130px;
+    border: 1px solid #ccc;
+    overflow-x: hidden;
+    overflow-y: scroll;
+    box-shadow: 0px 0px 5px 2px rgba(0, 0, 0, 0.2);
     ul {
       display: flex;
       flex-wrap: wrap;
-      padding: 10px;
       li {
         width: 14%;
-        font-size: 16px;
+        font-size: 20px;
         list-style: none;
         text-align: center;
         cursor: pointer;

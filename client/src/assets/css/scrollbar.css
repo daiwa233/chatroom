@@ -1,0 +1,27 @@
+.scrollbar {
+	float:left;
+	background:#fff;
+  overflow-y:scroll;
+}
+
+/* webkit 内核样式 */
+.scrollbar::-webkit-scrollbar {
+  width:5px;
+  box-sizing: border-box;
+}
+
+.scrollbar::-webkit-scrollbar-thumb {
+  background-color:#ccc;
+  background-clip: padding-box;
+  border-radius: 10px
+}
+
+
+.scrollbar::-webkit-scrollbar-thumb:hover {
+  background-color: #bbb;
+}
+  
+/* IE浏览器 */
+
+
+/* 不兼容Firefox */

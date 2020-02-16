@@ -3,6 +3,7 @@ import App from './App.vue'
 import router from './router'
 import moment from 'moment'
 
+
 Vue.config.productionTip = false
 let Senstive = ['傻逼','草泥马','sb', '操你妈','屏蔽词'];
 // 敏感词过滤，真实项目敏感词很多，不能这样搞

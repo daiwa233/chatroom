@@ -19,7 +19,8 @@ module.exports = (port) => {
         // 解密消息
         
         const encrypted = Encrypted(msg);
-        
+        console.log('--------------------'+encrypted)
+        console.log('--------------------')
         // 可能由于网络传输中可能的验证不正确做处理
         const msgObj = JSON.parse(encrypted) || {};
         if (msgObj.init) {

@@ -1,8 +1,16 @@
+/*
+ * @Author: your name
+ * @Date: 2019-12-16 13:03:17
+ * @LastEditTime : 2020-01-15 14:12:58
+ * @LastEditors  : Please set LastEditors
+ * @Description: In User Settings Edit
+ * @FilePath: \chatroom\client\src\router\index.js
+ */
 import Vue from 'vue'
 import VueRouter from 'vue-router'
 import Home from '../views/Home.vue'
-import dialog from '../components/dialog.vue'
-Vue.component('mydialog', dialog);
+import Login from '../views/login.vue'
+
 Vue.use(VueRouter)
 
 const routes = [
